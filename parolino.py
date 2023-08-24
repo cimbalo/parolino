@@ -100,7 +100,7 @@ def calculate_results():
     # print(app.words)
     all_words = [word for v in app.words.values() for word in v ]
     for word in set(all_words):
-        if dictionary.check(word):
+        if dictionary.check(word) or dictionary.check(word + u'\u0300') or dictionary.check(word + u'\u0301'):
             app.validity[word] = 1
         else:
             app.validity[word] = 0
