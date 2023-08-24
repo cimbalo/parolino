@@ -159,6 +159,7 @@
           if (this.running){
             this.score = -1;
             this.results = {};
+            this.validity = {};
             this.countDown = Math.round(this.running - new Date().getTime()/1000);
             if (this.counterId){
               clearTimeout(this.counterId);
@@ -297,7 +298,7 @@
           },
           generateSecretKey() {
               // Generate a secret key using crypto.getRandomValues()
-              let secretKey = new Uint8Array(6); // 32 bytes = 256 bits
+              let secretKey = new Uint8Array(6);
               window.crypto.getRandomValues(secretKey);
 
               // Convert the secret key to a base64-encoded string
@@ -326,7 +327,7 @@
           localStorage.clientid = this.generateSecretKey();
         }
         this.clientid = localStorage.clientid;
-        console.log(this.clientid)
+        console.log("ClientID ", this.clientid)
       },
 
     })
