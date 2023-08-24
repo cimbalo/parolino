@@ -11,8 +11,6 @@
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
   }
-
-
   @media (orientation: landscape) {
     body {
       margin-left: 4svh;
@@ -38,8 +36,17 @@
       width: calc(100svw - 102svh);
       overflow: scroll;
     }
+    #words span{
+      font-size: 5svh;
+    }
+    #words .badge{
+      font-size: 3svh;
+    }
+    #words button{
+      font-size: 2svh;
+      margin-right: 10px;
+    }
   }
-
   @media (orientation: portrait) {
     body {
       margin-left: 4svw;
@@ -62,8 +69,17 @@
       width: 100%;
       overflow: scroll;
     }
+    #words span{
+      font-size: 5svw;
+    }
+    #words .badge{
+      font-size: 3svw;
+    }
+    #words button{
+      font-size: 2.5svw;
+      margin-right: 10px;
+    }
   }
-
   #board td div div{
     vertical-align: middle;
     text-align: center;
@@ -71,16 +87,6 @@
   }
   #board td.selected{
     background-color: paleturquoise;
-  }
-
-  #words span{
-    font-size: 4vh;
-  }
-  #words .badge{
-    font-size: 1vh;
-  }
-  #words button{
-    font-size: 1.6vh;
   }
   #words button:active{
     background-color: #dc3545!important;
