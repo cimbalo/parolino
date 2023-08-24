@@ -1,5 +1,5 @@
 <script src="/static/js/vue.min.js"></script>
-<script src="/static/js/socket.io.slim.js"></script>
+<script src="/static/js/socket.io.min.js"></script>
 <script src="/static/js/vue-socket.io-extended.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/NoSleep.min.js"></script>
@@ -7,20 +7,63 @@
 <style>
   html, body {margin: 0; height: 100%; overflow: hidden}
   body {
-    margin-left: 4em;
-    margin-right: 4em;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
   }
-  #board td{
-    font-size: 10vw;
-    height: 22vw;
-    width: 22vw;
-    text-align: center;
+
+
+  @media (orientation: landscape) {
+    body {
+      margin-left: 4svh;
+      margin-right: 4svh;
+    }
+    #board {
+      margin-left: 4svh;
+    }
+    #board td{
+      font-size: 10svh;
+      height: 22svh;
+      width: 22svh;
+      text-align: center;
+    }
+    #board td div{
+      height: 15svh;
+      width: 15svh;
+      margin: 3.5svh;
+    }
+    #words {
+      float: left;
+      height: 100svh;
+      width: calc(100svw - 102svh);
+      overflow: scroll;
+    }
   }
-  #board td div{
-    height: 15vw;
-    width: 15vw;
-    margin: 3.5vw;
+
+  @media (orientation: portrait) {
+    body {
+      margin-left: 4svw;
+      margin-right: 4svw;
+    }
+    #board td{
+      font-size: 10svw;
+      height: 22svw;
+      width: 22svw;
+      text-align: center;
+    }
+    #board td div{
+      height: 15svw;
+      width: 15svw;
+      margin: 3.5svw;
+    }
+    #words {
+      float: left;
+      height: calc(100svh - 92svw);
+      width: 100%;
+      overflow: scroll;
+    }
   }
+
   #board td div div{
     vertical-align: middle;
     text-align: center;
@@ -29,20 +72,15 @@
   #board td.selected{
     background-color: paleturquoise;
   }
-  #words {
-    float: left;
-    height: calc(100vh - 100vw);
-    width: 100%;
-    overflow: scroll;
-  }
+
   #words span{
-    font-size: 5vh;
+    font-size: 4vh;
   }
   #words .badge{
-    font-size: 2vh;
+    font-size: 1vh;
   }
   #words button{
-    font-size: 2vh;
+    font-size: 1.6vh;
   }
   #words button:active{
     background-color: #dc3545!important;
