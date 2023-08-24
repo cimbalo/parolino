@@ -136,4 +136,4 @@ if __name__ == "__main__":
     app.results = {}
     app.scores = {}
     app.round = -1
-    socketio.run(app, host="0.0.0.0")#, debug=True)
+    socketio.run(app, port=5001)#, debug=True)
