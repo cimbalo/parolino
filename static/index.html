@@ -1,0 +1,274 @@
+<script src="/static/js/vue.min.js"></script>
+<script src="/static/js/socket.io.slim.js"></script>
+<script src="/static/js/vue-socket.io-extended.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/NoSleep.min.js"></script>
+<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+<style>
+  html, body {margin: 0; height: 100%; overflow: hidden}
+  body {
+    margin-left: 4em;
+    margin-right: 4em;
+  }
+  #board td{
+    font-size: 10vw;
+    height: 22vw;
+    width: 22vw;
+    text-align: center;
+  }
+  #board td div{
+    height: 15vw;
+    width: 15vw;
+    margin: 3.5vw;
+  }
+  #board td div div{
+    vertical-align: middle;
+    text-align: center;
+    display: table-cell;
+  }
+  #board td.selected{
+    background-color: paleturquoise;
+  }
+  #words {
+    float: left;
+    height: calc(100vh - 100vw);
+    width: 100%;
+    overflow: scroll;
+  }
+  #words span{
+    font-size: 5vh;
+  }
+  #words .badge{
+    font-size: 2vh;
+  }
+  #words button{
+    font-size: 2vh;
+  }
+  #words button:active{
+    background-color: #dc3545!important;
+    border-color: #dc3545!important;
+  }
+  #board {
+    float:left;
+  }
+  .invalid{
+    text-decoration: line-through; 
+  }
+</style>
+<script type="module">
+  var noSleep = new NoSleep();
+
+  const socket = io();
+
+  Vue.use(VueSocketIOExt, socket);
+  new Vue({
+    el: '#app',
+    data() {
+      return {
+        message: 'Parolino',
+        board: [[]],
+        words: [],
+        running: false,
+        countDown: 0,
+        results: {},
+        score: 0,
+        scores: null,
+        total_score: null,
+      }
+    },
+    sockets: {
+      connect() {
+        console.log('socket connected')
+      },
+      board(data) {
+        this.board = data;
+        console.log(11111, localStorage.board)
+        if (localStorage.board) {
+          if (JSON.parse(localStorage.board).hasOwnProperty(this.board)){
+            this.words = JSON.parse(localStorage.board)[this.board];
+          }else{
+            this.words = [];
+          }
+        }
+      },
+      running(data) {
+        console.log("running "+data)
+        this.running = data;
+        if (this.running){
+          this.results = {};
+          this.countDown = Math.round(this.running - new Date().getTime()/1000);
+          if (this.counterId){
+            clearTimeout(this.counterId);
+          }
+          this.countDownTimer();
+        }
+      },
+      results(data) {
+        if (!app.running){
+          this.results = JSON.parse(data)[this.clientid];
+          this.score = 0;
+          if (this.results){
+            for (var key in this.results){
+              this.score += this.results[key];
+            };
+          }
+        }
+      },
+      scores(data) {
+        this.scores = JSON.parse(data)[this.clientid];
+        console.log(this.scores)
+        if (this.scores){
+          this.total_score = 0;
+          for (var score of this.scores){
+            console.log(score);
+            if (score){
+              this.total_score += parseInt(score);
+            }
+          };
+        }
+      },
+    },
+    methods: {
+        start() {
+          socket.emit('start');
+        },
+        getTouches(evt) {
+          return evt.touches ||             // browser API
+                evt.originalEvent.touches; // jQuery
+        },
+        addLetter(evt){
+          var x = evt.touches[0].clientX;
+          var y = evt.touches[0].clientY;
+          var el = document.elementFromPoint(x, y)
+          if (el && el.parentNode && el.parentNode.closest){
+            var nel = el.parentNode.closest("td");
+          }else{
+            var nel = el;
+          }
+          if (nel && this.running){
+            for (let i = 0; i < this.path.length; i++) { 
+              if (this.path[i].dataset.row == nel.dataset.row && this.path[i].dataset.col == nel.dataset.col){
+                return;
+              }
+            }
+            if (this.path.length == 0 || Math.abs(this.path[this.path.length -1].dataset.row - nel.dataset.row) <= 1 && 
+                Math.abs(this.path[this.path.length -1].dataset.col - nel.dataset.col) <= 1){
+              // console.log(el)
+              if (typeof nel.dataset.letter === 'string'){
+                this.path.push(nel);
+              }
+              nel.classList.add("selected")
+            }
+            this.last = el;
+          }else if (document.querySelector('#board').contains(el)){
+            this.last = el;
+          }else{
+            this.last = null;
+          }
+        },
+        handleTouchStart(evt) {
+          // Enable wake lock.
+          // (must be wrapped in a user input event handler e.g. a mouse or touch handler)
+          noSleep.enable();
+          this.path = [];
+          this.addLetter(evt);
+        },
+        handleTouchEnd(evt) {
+          var newword = ""
+          this.path.forEach(el => {
+            el.classList.remove("selected");
+            newword += el.dataset.letter;
+          });
+          newword = newword.toLowerCase()
+          if (this.last){
+            if (newword.length > 2){
+              for (let i = 0; i < this.words.length; i++) { 
+                if (this.words[i] == newword){
+                  return;
+                }
+              }
+              this.words.unshift(newword);
+              let words = {};
+              words[this.board] = this.words;
+              localStorage.board = JSON.stringify(words);
+            }
+          }
+        },
+        handleTouchMove(evt) {
+          this.addLetter(evt);
+        },
+        countDownTimer () {
+          if (this.countDown > 0) {
+            this.counterId = setTimeout(() => {
+              this.countDown -= 1
+              this.countDownTimer()
+            }, 1000)
+          }
+          if (this.countDown == 0){
+            navigator.vibrate(1000);
+            this.words.sort();
+            socket.emit('send', this.clientid, this.words);
+          }
+        },
+        removeElement : function(word){
+          this.words.splice(this.words.indexOf(word), 1);
+          if (!this.running){
+            socket.emit('send', this.clientid, this.words);
+          }
+        },
+        generateSecretKey() {
+            // Generate a secret key using crypto.getRandomValues()
+            let secretKey = new Uint8Array(32); // 32 bytes = 256 bits
+            window.crypto.getRandomValues(secretKey);
+
+            // Convert the secret key to a base64-encoded string
+            let base64SecretKey = btoa(String.fromCharCode.apply(null, secretKey));
+
+            // Set the secret key in the component's data
+            return base64SecretKey;
+        },
+    },
+    created: function () {
+      document.addEventListener('touchstart', this.handleTouchStart, false);
+      document.addEventListener('touchmove', this.handleTouchMove, false);
+      document.addEventListener('touchend', this.handleTouchEnd, false);
+      if (!localStorage.clientid) {
+        localStorage.clientid= this.generateSecretKey();
+      }
+      this.clientid = localStorage.clientid;
+      console.log(this.clientid)
+    },
+
+  })
+</script>
+
+    <div id="app">
+      <div>
+        <h1>
+          {{ message }}
+          <button type="button" class="btn btn-primary" @click="start" :disabled="running">Start</button>
+          <span v-if="countDown">Time: {{countDown}}</span>
+          <span v-if="total_score">Total: {{total_score}}</span>
+          <span v-if="score >= 0">Score: {{score}}</span>
+        </h1>
+      </div>
+      <div id="words">  
+        <div v-for="(word, i) in words">
+          <span :class="{ invalid: results && results[word] == 0 }">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">remove</button>
+        </div>
+      </div>
+      <table id="board">
+        <template v-for="(row, i) in board">
+          <tr>
+            <td v-for="(cell, j) in row" :data-row="i" :data-col="j" :data-letter="cell">
+              <div>
+                <div><span>{{ cell }}</span></div>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </table>
+
+    </div>
+
+<script>
