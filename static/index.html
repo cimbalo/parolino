@@ -25,11 +25,6 @@
       width: 22svh;
       text-align: center;
     }
-    #board td div{
-      height: 15svh;
-      width: 15svh;
-      margin: 3.5svh;
-    }
     #words {
       float: left;
       height: 100svh;
@@ -57,11 +52,6 @@
       height: 22svw;
       width: 22svw;
       text-align: center;
-    }
-    #board td div{
-      height: 15svw;
-      width: 15svw;
-      margin: 3.5svw;
     }
     #words {
       float: left;
@@ -186,28 +176,31 @@
             var x = evt.clientX;
             var y = evt.clientY;
           }
-          var el = document.elementFromPoint(x, y)
-          if (el && el.parentNode && el.parentNode.closest){
-            var nel = el.parentNode.closest("td");
-          }else{
-            var nel = el;
-          }
+          var nel = document.elementFromPoint(x, y)
           if (nel && this.running){
-            for (let i = 0; i < this.path.length; i++) { 
-              if (this.path[i].dataset.row == nel.dataset.row && this.path[i].dataset.col == nel.dataset.col){
-                return;
+            const box = nel.getBoundingClientRect()
+
+            var a = x - (box.left + box.right) / 2;
+            var b = y - (box.top + box.bottom) / 2;
+
+            var c = Math.sqrt( a*a + b*b );
+            if (c < nel.offsetHeight/2){
+              for (let i = 0; i < this.path.length; i++) { 
+                if (this.path[i].dataset.row == nel.dataset.row && this.path[i].dataset.col == nel.dataset.col){
+                  return;
+                }
               }
-            }
-            if (this.path.length == 0 || Math.abs(this.path[this.path.length -1].dataset.row - nel.dataset.row) <= 1 && 
-                Math.abs(this.path[this.path.length -1].dataset.col - nel.dataset.col) <= 1){
-              if (typeof nel.dataset.letter === 'string'){
-                this.path.push(nel);
+              if (this.path.length == 0 || Math.abs(this.path[this.path.length -1].dataset.row - nel.dataset.row) <= 1 && 
+                  Math.abs(this.path[this.path.length -1].dataset.col - nel.dataset.col) <= 1){
+                if (typeof nel.dataset.letter === 'string'){
+                  this.path.push(nel);
+                }
+                nel.classList.add("selected")
               }
-              nel.classList.add("selected")
+              this.last = nel;
             }
-            this.last = el;
           }else if (document.querySelector('#board').contains(el)){
-            this.last = el;
+            this.last = nel;
           }else{
             this.last = null;
           }
@@ -228,7 +221,7 @@
             newword += el.dataset.letter;
           });
           newword = newword.toLowerCase()
-          if (this.last){
+          if (this.last && this.running){
             if (newword.length > 2){
               for (let i = 0; i < this.words.length; i++) { 
                 if (this.words[i] == newword){
@@ -317,9 +310,7 @@
         <template v-for="(row, i) in board">
           <tr>
             <td v-for="(cell, j) in row" :data-row="i" :data-col="j" :data-letter="cell">
-              <div>
-                <div><span>{{ cell }}</span></div>
-              </div>
+              {{ cell }}
             </td>
           </tr>
         </template>
