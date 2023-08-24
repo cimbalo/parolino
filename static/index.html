@@ -1,5 +1,6 @@
 <html dir="ltr" lang="en">
 <head>
+  <title>Parolino</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/static/js/vue.min.js"></script>
   <script src="/static/js/socket.io.min.js"></script>
@@ -21,13 +22,19 @@
     }
     @media (orientation: landscape) {
       body {
+        margin-left: 4vh;
+        margin-right: 4vh;
         margin-left: 4svh;
         margin-right: 4svh;
       }
       #board {
+        margin-left: 4vh;
         margin-left: 4svh;
       }
       #board td{
+        font-size: 10vh;
+        height: 22vh;
+        width: 22vh;
         font-size: 10svh;
         height: 22svh;
         width: 22svh;
@@ -35,27 +42,37 @@
       }
       #words {
         float: left;
+        height: calc(100vh - 2.5rem);
+        width: calc(100vw - 106vh);
         height: calc(100svh - 2.5rem);
         width: calc(100svw - 106svh);
         overflow: scroll;
       }
       #words span{
+        font-size: 6vh;
         font-size: 6svh;
       }
       #words .badge{
+        font-size: 3vh;
         font-size: 3svh;
       }
       #words button{
+        font-size: 2vh;
         font-size: 2svh;
         margin-right: 10px;
       }
     }
     @media (orientation: portrait) {
       body {
+        margin-left: 4vw;
+        margin-right: 4vw;
         margin-left: 4svw;
         margin-right: 4svw;
       }
       #board td{
+        font-size: 10vw;
+        height: 22vw;
+        width: 22vw;
         font-size: 10svw;
         height: 22svw;
         width: 22svw;
@@ -63,17 +80,21 @@
       }
       #words {
         float: left;
+        height: calc(100vh - 92vw);
         height: calc(100svh - 92svw);
         width: 100%;
         overflow: scroll;
       }
       #words span{
+        font-size: 6vw;
         font-size: 6svw;
       }
       #words .badge{
+        font-size: 3vw;
         font-size: 3svw;
       }
       #words button{
+        font-size: 2.5vw;
         font-size: 2.5svw;
         margin-right: 10px;
       }
@@ -355,7 +376,7 @@
       </div>
       <div id="words">  
         <div v-for="(word, i) in words">
-          <span :class="{ duplicate: results && results[word] == 0, 'text-warning': validity && validity[word] == 0, 'text-danger': validity && validity[word] == -1 }" class="float-none">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">Remove</button>
+          <span :class="{ duplicate: results && results[word] == 0, 'text-warning': validity && validity[word] == 0 && results && results[word] != 0, 'text-danger': validity && validity[word] == -1 && results && results[word] != 0}" class="float-none">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">Remove</button>
         </div>
       </div>
       <table id="board">
