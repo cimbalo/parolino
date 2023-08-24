@@ -32,7 +32,7 @@
       overflow: scroll;
     }
     #words span{
-      font-size: 5svh;
+      font-size: 6svh;
     }
     #words .badge{
       font-size: 3svh;
@@ -60,7 +60,7 @@
       overflow: scroll;
     }
     #words span{
-      font-size: 5svw;
+      font-size: 6svw;
     }
     #words .badge{
       font-size: 3svw;
@@ -172,35 +172,37 @@
           if (evt.touches!=undefined){
             var x = evt.touches[0].clientX;
             var y = evt.touches[0].clientY;
+            var target = document.elementFromPoint(x, y);
           }else{
             var x = evt.clientX;
             var y = evt.clientY;
+            var target = evt.target;
           }
-          var nel = document.elementFromPoint(x, y)
-          if (nel && this.running){
-            const box = nel.getBoundingClientRect()
+          
+          if (!target || !document.querySelector('#board').contains(target)){
+            this.last = null;
+          } else if (this.running){
+            
+            const box = target.getBoundingClientRect()
 
             var a = x - (box.left + box.right) / 2;
             var b = y - (box.top + box.bottom) / 2;
 
-            var c = Math.sqrt( a*a + b*b );
-            if (c < nel.offsetHeight/2){
+            if (a*a + b*b < (target.offsetHeight/2)**1.95){
               for (let i = 0; i < this.path.length; i++) { 
-                if (this.path[i].dataset.row == nel.dataset.row && this.path[i].dataset.col == nel.dataset.col){
+                if (this.path[i].dataset.row == target.dataset.row && this.path[i].dataset.col == target.dataset.col){
                   return;
                 }
               }
-              if (this.path.length == 0 || Math.abs(this.path[this.path.length -1].dataset.row - nel.dataset.row) <= 1 && 
-                  Math.abs(this.path[this.path.length -1].dataset.col - nel.dataset.col) <= 1){
-                if (typeof nel.dataset.letter === 'string'){
-                  this.path.push(nel);
+              if (this.path.length == 0 || Math.abs(this.path[this.path.length -1].dataset.row - target.dataset.row) <= 1 && 
+                  Math.abs(this.path[this.path.length -1].dataset.col - target.dataset.col) <= 1){
+                if (typeof target.dataset.letter === 'string'){
+                  this.path.push(target);
                 }
-                nel.classList.add("selected")
+                target.classList.add("selected")
               }
-              this.last = nel;
+              this.last = target;
             }
-          }else if (document.querySelector('#board').contains(el)){
-            this.last = nel;
           }else{
             this.last = null;
           }
@@ -303,7 +305,7 @@
       </div>
       <div id="words">  
         <div v-for="(word, i) in words">
-          <span :class="{ invalid: results && results[word] == 0 }">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">remove</button>
+          <span :class="{ invalid: results && results[word] == 0 }" class="float-none">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">Remove</button>
         </div>
       </div>
       <table id="board">
