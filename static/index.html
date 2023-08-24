@@ -128,6 +128,7 @@
         console.log("running "+running)
         this.running = running;
         if (this.running){
+          this.score = -1;
           this.results = {};
           this.countDown = Math.round(this.running - new Date().getTime()/1000);
           if (this.counterId){
@@ -302,11 +303,11 @@
   })
 </script>
 <div id="app">
-      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal fade" id="usernameModal" tabindex="-1" aria-labelledby="usernameModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="exampleModalLabel">Username</h1>
+              <h1 class="modal-title fs-5" id="usernameModalLabel">Username</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -322,14 +323,22 @@
       </div>
       <div>
         <h1>
-          {{ message }}
-          <button type="button" class="btn btn-primary" @click="start" :disabled="running">Start</button>
-          <span v-if="countDown > 0 ">Time: {{countDown}}</span>
-          <span v-if="total_score">Total: {{total_score}}</span>
-          <span v-if="score >= 0">Score: {{score}}</span>
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-            {{clientid}}
-          </button>
+          <button type="button" class="btn btn-primary float-end mt-1" data-bs-toggle="modal" data-bs-target="#usernameModal">{{clientid| truncate(13)}}</button>
+          <div class="row">
+            <div class="col-sm">
+              {{ message }}
+              <button type="button" class="btn btn-primary" @click="start" :disabled="running">Start</button>
+            </div>
+            <div class="col-sm" v-if="countDown > 0 ">
+              Time: {{countDown}}
+            </div>
+            <div class="col-sm" v-if="score >= 0">
+              Score: {{score}}
+            </div>
+            <div class="col-sm" v-if="total_score">
+              Total: {{total_score}}
+            </div>
+          </div>
         </h1>
       </div>
       <div id="words">  
