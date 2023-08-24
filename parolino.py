@@ -45,8 +45,7 @@ def reset():
 @socketio.on('connect')
 def connect():
     print("connected")
-    emit('board', app.letters)
-    emit('running', app.running)
+    emit('board', (app.letters, app.running))
     send_result()
 
 
@@ -54,11 +53,10 @@ def connect():
 def start():
     app.round += 1
     app.letters = roll_dice()
-    socketio.emit('board', app.letters)
     socketio.start_background_task(background_thread)
     app.running = time.time() + DURATION
     app.results = {}
-    socketio.emit('running', app.running)
+    socketio.emit('board', (app.letters, app.running))
 
 @socketio.on('send')
 def send(sid, words):
@@ -79,8 +77,7 @@ def send_result():
                 partial += score 
             app.scores[k][app.round] = partial
         print(app.round, app.scores)
-    socketio.emit('results', json.dumps(app.results))
-    socketio.emit('scores', json.dumps(app.scores))
+    socketio.emit('results', (json.dumps(app.results), json.dumps(app.scores)))
 
 def score(word):
     if len(word) <= 4:
@@ -114,7 +111,7 @@ def calculate_results():
 def background_thread():
     socketio.sleep(DURATION)
     app.running = None
-    socketio.emit('running', app.running)
+    socketio.emit('running', ([], app.running))
     print("stopping")
 
 
