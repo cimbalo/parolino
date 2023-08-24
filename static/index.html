@@ -1,308 +1,318 @@
-<script src="/static/js/vue.min.js"></script>
-<script src="/static/js/socket.io.min.js"></script>
-<script src="/static/js/vue-socket.io-extended.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/NoSleep.min.js"></script>
-<link rel="stylesheet" href="/static/css/bootstrap.min.css">
-<style>
-  html, body {margin: 0; height: 100%; overflow: hidden}
-  body {
-    -webkit-user-select: none; /* Safari */
-    -ms-user-select: none; /* IE 10 and IE 11 */
-    user-select: none; /* Standard syntax */
-  }
-  @media (orientation: landscape) {
+<html dir="ltr" lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="/static/js/vue.min.js"></script>
+  <script src="/static/js/socket.io.min.js"></script>
+  <script src="/static/js/vue-socket.io-extended.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/js/NoSleep.min.js"></script>
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/font-awesome.min.css">
+  <style>
+    html, body {margin: 0; height: 100%; overflow: hidden}
     body {
-      margin-left: 4svh;
-      margin-right: 4svh;
+      -webkit-user-select: none; /* Safari */
+      -ms-user-select: none; /* IE 10 and IE 11 */
+      user-select: none; /* Standard syntax */
+    }
+    .nopadding {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    @media (orientation: landscape) {
+      body {
+        margin-left: 4svh;
+        margin-right: 4svh;
+      }
+      #board {
+        margin-left: 4svh;
+      }
+      #board td{
+        font-size: 10svh;
+        height: 22svh;
+        width: 22svh;
+        text-align: center;
+      }
+      #words {
+        float: left;
+        height: calc(100svh - 2.5rem);
+        width: calc(100svw - 102svh);
+        overflow: scroll;
+      }
+      #words span{
+        font-size: 6svh;
+      }
+      #words .badge{
+        font-size: 3svh;
+      }
+      #words button{
+        font-size: 2svh;
+        margin-right: 10px;
+      }
+    }
+    @media (orientation: portrait) {
+      body {
+        margin-left: 4svw;
+        margin-right: 4svw;
+      }
+      #board td{
+        font-size: 10svw;
+        height: 22svw;
+        width: 22svw;
+        text-align: center;
+      }
+      #words {
+        float: left;
+        height: calc(100svh - 92svw);
+        width: 100%;
+        overflow: scroll;
+      }
+      #words span{
+        font-size: 6svw;
+      }
+      #words .badge{
+        font-size: 3svw;
+      }
+      #words button{
+        font-size: 2.5svw;
+        margin-right: 10px;
+      }
+    }
+    #board td div div{
+      vertical-align: middle;
+      text-align: center;
+      display: table-cell;
+    }
+    #board td.selected{
+      background-color: paleturquoise;
+    }
+    #words button:active{
+      background-color: #dc3545!important;
+      border-color: #dc3545!important;
     }
     #board {
-      margin-left: 4svh;
+      float:left;
     }
-    #board td{
-      font-size: 10svh;
-      height: 22svh;
-      width: 22svh;
-      text-align: center;
+    .duplicate{
+      text-decoration: line-through; 
     }
-    #words {
-      float: left;
-      height: calc(100svh - 2.5rem);
-      width: calc(100svw - 102svh);
-      overflow: scroll;
-    }
-    #words span{
-      font-size: 6svh;
-    }
-    #words .badge{
-      font-size: 3svh;
-    }
-    #words button{
-      font-size: 2svh;
-      margin-right: 10px;
-    }
-  }
-  @media (orientation: portrait) {
-    body {
-      margin-left: 4svw;
-      margin-right: 4svw;
-    }
-    #board td{
-      font-size: 10svw;
-      height: 22svw;
-      width: 22svw;
-      text-align: center;
-    }
-    #words {
-      float: left;
-      height: calc(100svh - 92svw);
-      width: 100%;
-      overflow: scroll;
-    }
-    #words span{
-      font-size: 6svw;
-    }
-    #words .badge{
-      font-size: 3svw;
-    }
-    #words button{
-      font-size: 2.5svw;
-      margin-right: 10px;
-    }
-  }
-  #board td div div{
-    vertical-align: middle;
-    text-align: center;
-    display: table-cell;
-  }
-  #board td.selected{
-    background-color: paleturquoise;
-  }
-  #words button:active{
-    background-color: #dc3545!important;
-    border-color: #dc3545!important;
-  }
-  #board {
-    float:left;
-  }
-  .duplicate{
-    text-decoration: line-through; 
-  }
-</style>
-<script type="module">
-  var noSleep = new NoSleep();
+  </style>
+  <script type="module">
+    var noSleep = new NoSleep();
 
-  const socket = io();
+    const socket = io();
 
-  Vue.use(VueSocketIOExt, socket);
-  new Vue({
-    el: '#app',
-    data() {
-      return {
-        message: 'Parolino',
-        board: [[]],
-        words: [],
-        running: false,
-        countDown: 0,
-        results: {},
-        validity: {},
-        score: 0,
-        scores: null,
-        total_score: null,
-        pathStarted: false,
-      }
-    },
-    sockets: {
-      connect() {
-        console.log('socket connected')
+    Vue.use(VueSocketIOExt, socket);
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          message: 'Parolino',
+          board: [[]],
+          words: [],
+          running: false,
+          countDown: 0,
+          results: {},
+          validity: {},
+          score: 0,
+          scores: null,
+          total_score: null,
+          pathStarted: false,
+        }
       },
-      board(board, running) {
-        this.board = board;
-        if (localStorage.board) {
-          if (JSON.parse(localStorage.board).hasOwnProperty(this.board)){
-            this.words = JSON.parse(localStorage.board)[this.board];
+      sockets: {
+        connect() {
+          console.log('socket connected')
+        },
+        board(board, running) {
+          this.board = board;
+          if (localStorage.words) {
+            if (JSON.parse(localStorage.words).hasOwnProperty(this.board)){
+              this.words = JSON.parse(localStorage.words)[this.board];
+            }else{
+              this.words = [];
+            }
+          }
+          console.log("running "+running)
+          this.running = running;
+          if (this.running){
+            this.score = -1;
+            this.results = {};
+            this.countDown = Math.round(this.running - new Date().getTime()/1000);
+            if (this.counterId){
+              clearTimeout(this.counterId);
+            }
+            this.countDownTimer();
           }else{
-            this.words = [];
+            if (this.counterId){
+              this.countDown = 0;
+            }
           }
-        }
-        console.log("running "+running)
-        this.running = running;
-        if (this.running){
-          this.score = -1;
-          this.results = {};
-          this.countDown = Math.round(this.running - new Date().getTime()/1000);
-          if (this.counterId){
-            clearTimeout(this.counterId);
+        },
+        results(results, validity, scores) {
+          this.validity = JSON.parse(validity)
+          if (!app.running){
+            this.results = JSON.parse(results)[this.clientid];
+            this.score = 0;
+            if (this.results){
+              for (var key in this.results){
+                this.score += this.results[key];
+              };
+            }
           }
-          this.countDownTimer();
-        }else{
-          if (this.counterId){
-            this.countDown = 0;
-          }
-        }
-      },
-      results(results, validity, scores) {
-        this.validity = JSON.parse(validity)
-        if (!app.running){
-          this.results = JSON.parse(results)[this.clientid];
-          this.score = 0;
-          if (this.results){
-            for (var key in this.results){
-              this.score += this.results[key];
+          this.scores = JSON.parse(scores)[this.clientid];
+          if (this.scores){
+            this.total_score = 0;
+            for (var score of this.scores){
+              if (score){
+                this.total_score += parseInt(score);
+              }
             };
           }
-        }
-        this.scores = JSON.parse(scores)[this.clientid];
-        if (this.scores){
-          this.total_score = 0;
-          for (var score of this.scores){
-            if (score){
-              this.total_score += parseInt(score);
-            }
-          };
-        }
+        },
       },
-    },
-    methods: {
-        start() {
-          socket.emit('start');
-        },
-        getTouches(evt) {
-          return evt.touches ||             // browser API
-                evt.originalEvent.touches; // jQuery
-        },
-        addLetter(evt){
-          if (evt.touches!=undefined){
-            var x = evt.touches[0].clientX;
-            var y = evt.touches[0].clientY;
-            var target = document.elementFromPoint(x, y);
-          }else{
-            var x = evt.clientX;
-            var y = evt.clientY;
-            var target = evt.target;
-          }
-          
-          if (!target || !document.querySelector('#board').contains(target)){
-            this.last = null;
-          } else if (this.running){
+      methods: {
+          start() {
+            socket.emit('start');
+          },
+          getTouches(evt) {
+            return evt.touches ||             // browser API
+                  evt.originalEvent.touches; // jQuery
+          },
+          addLetter(evt){
+            if (evt.touches!=undefined){
+              var x = evt.touches[0].clientX;
+              var y = evt.touches[0].clientY;
+              var target = document.elementFromPoint(x, y);
+            }else{
+              var x = evt.clientX;
+              var y = evt.clientY;
+              var target = evt.target;
+            }
             
-            const box = target.getBoundingClientRect()
+            if (!target || !document.querySelector('#board').contains(target)){
+              this.last = null;
+            } else if (this.running){
+              
+              const box = target.getBoundingClientRect()
 
-            var a = x - (box.left + box.right) / 2;
-            var b = y - (box.top + box.bottom) / 2;
+              var a = x - (box.left + box.right) / 2;
+              var b = y - (box.top + box.bottom) / 2;
 
-            if (a*a + b*b < (target.offsetHeight/2)**1.95){
-              for (let i = 0; i < this.path.length; i++) { 
-                if (this.path[i].dataset.row == target.dataset.row && this.path[i].dataset.col == target.dataset.col){
-                  return;
+              if (a*a + b*b < (target.offsetHeight/2)**1.95){
+                for (let i = 0; i < this.path.length; i++) { 
+                  if (this.path[i].dataset.row == target.dataset.row && this.path[i].dataset.col == target.dataset.col){
+                    return;
+                  }
                 }
-              }
-              if (this.path.length == 0 || Math.abs(this.path[this.path.length -1].dataset.row - target.dataset.row) <= 1 && 
-                  Math.abs(this.path[this.path.length -1].dataset.col - target.dataset.col) <= 1){
-                if (typeof target.dataset.letter === 'string'){
-                  this.path.push(target);
+                if (this.path.length == 0 || Math.abs(this.path[this.path.length -1].dataset.row - target.dataset.row) <= 1 && 
+                    Math.abs(this.path[this.path.length -1].dataset.col - target.dataset.col) <= 1){
+                  if (typeof target.dataset.letter === 'string'){
+                    this.path.push(target);
+                  }
+                  target.classList.add("selected")
                 }
-                target.classList.add("selected")
+                this.last = target;
               }
-              this.last = target;
+            }else{
+              this.last = null;
             }
-          }else{
-            this.last = null;
-          }
-        },
-        enableNoSleep(){
-          noSleep.enable();
-          document.removeEventListener('touchstart', this.enableNoSleep, false);
-        },
-        handleTouchStart(evt) {
-          // Enable wake lock.
-          // (must be wrapped in a user input event handler e.g. a mouse or touch handler)
-          this.path = [];
-          this.pathStarted = true;
-          this.addLetter(evt);
-        },
-        handleTouchEnd(evt) {
-          this.pathStarted = false;
-          var newword = ""
-          this.path.forEach(el => {
-            el.classList.remove("selected");
-            newword += el.dataset.letter;
-          });
-          newword = newword.toLowerCase()
-          if (this.last && this.running){
-            if (newword.length > 2){
-              for (let i = 0; i < this.words.length; i++) { 
-                if (this.words[i] == newword){
-                  return;
-                }
-              }
-              this.words.unshift(newword);
-              let words = {};
-              words[this.board] = this.words;
-              localStorage.board = JSON.stringify(words);
-            }
-          }
-        },
-        handleTouchMove(evt) {
-          if (this.pathStarted){
+          },
+          enableNoSleep(){
+            noSleep.enable();
+            document.removeEventListener('touchstart', this.enableNoSleep, false);
+          },
+          handleTouchStart(evt) {
+            // Enable wake lock.
+            // (must be wrapped in a user input event handler e.g. a mouse or touch handler)
+            this.path = [];
+            this.pathStarted = true;
             this.addLetter(evt);
-          }
-        },
-        countDownTimer () {
-          if (this.countDown <= 0){
-            navigator.vibrate(1000);
-            this.words.sort();
-            socket.emit('send', this.clientid, this.words);
-          } else if (this.countDown > 0) {
-            this.counterId = setTimeout(() => {
-              this.countDown -= 1
-              this.countDownTimer()
-            }, 1000)
-          } 
-        },
-        removeElement : function(word){
-          this.words.splice(this.words.indexOf(word), 1);
-          if (!this.running){
-            socket.emit('send', this.clientid, this.words);
-          }
-        },
-        generateSecretKey() {
-            // Generate a secret key using crypto.getRandomValues()
-            let secretKey = new Uint8Array(32); // 32 bytes = 256 bits
-            window.crypto.getRandomValues(secretKey);
+          },
+          handleTouchEnd(evt) {
+            this.pathStarted = false;
+            var newword = ""
+            this.path.forEach(el => {
+              el.classList.remove("selected");
+              newword += el.dataset.letter;
+            });
+            newword = newword.toLowerCase()
+            if (this.last && this.running){
+              if (newword.length > 2){
+                for (let i = 0; i < this.words.length; i++) { 
+                  if (this.words[i] == newword){
+                    return;
+                  }
+                }
+                this.words.unshift(newword);
+                let words = {};
+                words[this.board] = this.words;
+                localStorage.words = JSON.stringify(words);
+              }
+            }
+          },
+          handleTouchMove(evt) {
+            if (this.pathStarted){
+              this.addLetter(evt);
+            }
+          },
+          countDownTimer () {
+            if (this.countDown <= 0){
+              navigator.vibrate(1000);
+              this.words.sort();
+              socket.emit('send', this.clientid, this.words);
+            } else if (this.countDown > 0) {
+              this.counterId = setTimeout(() => {
+                this.countDown -= 1
+                this.countDownTimer()
+              }, 1000)
+            } 
+          },
+          removeElement : function(word){
+            this.words.splice(this.words.indexOf(word), 1);
+            if (!this.running){
+              socket.emit('send', this.clientid, this.words);
+            }
+          },
+          generateSecretKey() {
+              // Generate a secret key using crypto.getRandomValues()
+              let secretKey = new Uint8Array(6); // 32 bytes = 256 bits
+              window.crypto.getRandomValues(secretKey);
 
-            // Convert the secret key to a base64-encoded string
-            let base64SecretKey = btoa(String.fromCharCode.apply(null, secretKey));
+              // Convert the secret key to a base64-encoded string
+              let base64SecretKey = btoa(String.fromCharCode.apply(null, secretKey));
 
-            // Set the secret key in the component's data
-            return base64SecretKey;
-        },
-        updateClientid(event) {
-          localStorage.clientid = this.clientid;
-          this.$forceUpdate();
-        },
-    },
-    created: function () {
-      document.addEventListener('contextmenu', event => event.preventDefault());
-      document.addEventListener('touchstart', this.enableNoSleep, false);
-      
-      document.addEventListener('touchstart', this.handleTouchStart, false);
-      document.addEventListener('touchmove', this.handleTouchMove, false);
-      document.addEventListener('touchend', this.handleTouchEnd, false);
+              // Set the secret key in the component's data
+              return base64SecretKey;
+          },
+          updateClientid(event) {
+            localStorage.clientid = this.clientid;
+            this.$forceUpdate();
+          },
+      },
+      created: function () {
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('touchstart', this.enableNoSleep, false);
+        
+        document.addEventListener('touchstart', this.handleTouchStart, false);
+        document.addEventListener('touchmove', this.handleTouchMove, false);
+        document.addEventListener('touchend', this.handleTouchEnd, false);
 
-      document.addEventListener('mousedown', this.handleTouchStart, false);
-      document.addEventListener('mousemove', this.handleTouchMove, false);
-      document.addEventListener('mouseup', this.handleTouchEnd, false);
-      if (!localStorage.clientid) {
-        localStorage.clientid = this.generateSecretKey();
-      }
-      this.clientid = localStorage.clientid;
-      console.log(this.clientid)
-    },
+        document.addEventListener('mousedown', this.handleTouchStart, false);
+        document.addEventListener('mousemove', this.handleTouchMove, false);
+        document.addEventListener('mouseup', this.handleTouchEnd, false);
+        if (!localStorage.clientid) {
+          localStorage.clientid = this.generateSecretKey();
+        }
+        this.clientid = localStorage.clientid;
+        console.log(this.clientid)
+      },
 
-  })
-</script>
-<div id="app">
+    })
+  </script>
+  </head>
+  <body>
+    <div id="app">
       <div class="modal fade" id="usernameModal" tabindex="-1" aria-labelledby="usernameModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
@@ -322,24 +332,26 @@
         </div>
       </div>
       <div>
-        <h1>
-          <button type="button" class="btn btn-primary float-end mt-1" data-bs-toggle="modal" data-bs-target="#usernameModal">{{clientid| truncate(13)}}</button>
+        <h6>
+          <button type="button" class="btn btn-primary float-end mt-1" data-bs-toggle="modal" data-bs-target="#usernameModal" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
+            <i class="fa fa-bars"></i>
+          </button>
           <div class="row">
-            <div class="col-sm">
+            <div class="col nopadding">
               {{ message }}
-              <button type="button" class="btn btn-primary" @click="start" :disabled="running">Start</button>
+              <button type="button" class="btn btn-primary" @click="start" :disabled="running" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .3rem; --bs-btn-font-size: .55rem;">Start</button>
             </div>
-            <div class="col-sm" v-if="countDown > 0 ">
+            <div class="col nopadding" v-if="countDown > 0 ">
               Time: {{countDown}}
             </div>
-            <div class="col-sm" v-if="score >= 0">
+            <div class="col nopadding" v-if="score >= 0">
               Score: {{score}}
             </div>
-            <div class="col-sm" v-if="total_score">
+            <div class="col nopadding" v-if="total_score">
               Total: {{total_score}}
             </div>
           </div>
-        </h1>
+        </h6>
       </div>
       <div id="words">  
         <div v-for="(word, i) in words">
@@ -355,7 +367,6 @@
           </tr>
         </template>
       </table>
-
     </div>
-
-<script>
+  </body>
+</html>
