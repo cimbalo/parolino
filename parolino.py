@@ -4,6 +4,7 @@ import random
 import json
 from flask import Flask, url_for, redirect
 from flask_socketio import SocketIO, emit
+import enchant
 # random.seed(42)
 
 DURATION = 180
@@ -26,11 +27,13 @@ shefie
 ulenog"""
 
 app = Flask(__name__)
-socketio = SocketIO(app,cors_allowed_origins='https://parolino.mooo.com')
+socketio = SocketIO(app,cors_allowed_origins='*')
+
+dictionary = enchant.Dict("it_IT")
 
 @app.route('/')
 def home():
-    return redirect(url_for('static', filename='index.html'))
+    return app.send_static_file('index.html')
 
 @app.route('/reset')
 def reset():
@@ -38,6 +41,7 @@ def reset():
     app.running = False
     app.words = {}
     app.results = {}
+    app.validity = {}
     app.scores = {}
     app.round = -1
     return "ok"
@@ -56,6 +60,7 @@ def start():
     socketio.start_background_task(background_thread)
     app.running = time.time() + DURATION
     app.results = {}
+    app.validity = {}
     socketio.emit('board', (app.letters, app.running))
 
 @socketio.on('send')
@@ -74,10 +79,10 @@ def send_result():
             for i in range(len(app.scores[k]), app.round + 1):
                 app.scores[k].append(None)
             for word, score in v.items():
-                partial += score 
+                partial += score
             app.scores[k][app.round] = partial
         print(app.round, app.scores)
-    socketio.emit('results', (json.dumps(app.results), json.dumps(app.scores)))
+    socketio.emit('results', (json.dumps(app.results), json.dumps(app.validity), json.dumps(app.scores)))
 
 def score(word):
     if len(word) <= 4:
@@ -94,14 +99,19 @@ def score(word):
 def calculate_results():
     # print(app.words)
     all_words = [word for v in app.words.values() for word in v ]
-    valid = []
+    for word in set(all_words):
+        if dictionary.check(word):
+            app.validity[word] = 1
+        else:
+            app.validity[word] = 0
+    unique = []
     for word in set(all_words):
         if all_words.count(word) == 1:
-            valid.append(word)
+            unique.append(word)
     for k, v in app.words.items():
         app.results[k] = {}
         for word in v:
-            if word in valid:
+            if word in unique:
                 app.results[k][word] = score(word)
             else:
                 app.results[k][word] = 0
@@ -111,7 +121,7 @@ def calculate_results():
 def background_thread():
     socketio.sleep(DURATION)
     app.running = None
-    socketio.emit('running', ([], app.running))
+    socketio.emit('board', (app.letters, app.running))
     print("stopping")
 
 
@@ -131,6 +141,7 @@ if __name__ == "__main__":
     app.running = False
     app.words = {}
     app.results = {}
+    app.validity = {}
     app.scores = {}
     app.round = -1
     socketio.run(app, port=5001)#, debug=True)

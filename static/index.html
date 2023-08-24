@@ -85,7 +85,7 @@
   #board {
     float:left;
   }
-  .invalid{
+  .duplicate{
     text-decoration: line-through; 
   }
 </style>
@@ -105,6 +105,7 @@
         running: false,
         countDown: 0,
         results: {},
+        validity: {},
         score: 0,
         scores: null,
         total_score: null,
@@ -136,11 +137,11 @@
         }else{
           if (this.counterId){
             this.countDown = 0;
-            clearTimeout(this.counterId);
           }
         }
       },
-      results(results, scores) {
+      results(results, validity, scores) {
+        this.validity = JSON.parse(validity)
         if (!app.running){
           this.results = JSON.parse(results)[this.clientid];
           this.score = 0;
@@ -247,17 +248,16 @@
           }
         },
         countDownTimer () {
-          if (this.countDown > 0) {
+          if (this.countDown <= 0){
+            navigator.vibrate(1000);
+            this.words.sort();
+            socket.emit('send', this.clientid, this.words);
+          } else if (this.countDown > 0) {
             this.counterId = setTimeout(() => {
               this.countDown -= 1
               this.countDownTimer()
             }, 1000)
-          }
-          if (this.countDown == 0){
-            navigator.vibrate(1000);
-            this.words.sort();
-            socket.emit('send', this.clientid, this.words);
-          }
+          } 
         },
         removeElement : function(word){
           this.words.splice(this.words.indexOf(word), 1);
@@ -276,6 +276,10 @@
             // Set the secret key in the component's data
             return base64SecretKey;
         },
+        updateClientid(event) {
+          localStorage.clientid = this.clientid;
+          this.$forceUpdate();
+        },
     },
     created: function () {
       document.addEventListener('contextmenu', event => event.preventDefault());
@@ -289,7 +293,7 @@
       document.addEventListener('mousemove', this.handleTouchMove, false);
       document.addEventListener('mouseup', this.handleTouchEnd, false);
       if (!localStorage.clientid) {
-        localStorage.clientid= this.generateSecretKey();
+        localStorage.clientid = this.generateSecretKey();
       }
       this.clientid = localStorage.clientid;
       console.log(this.clientid)
@@ -297,20 +301,40 @@
 
   })
 </script>
-
-    <div id="app">
+<div id="app">
+      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Username</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <input type="text" class="form-control" id="username" v-model="clientid" v-on:change="updateClientid">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div>
         <h1>
           {{ message }}
           <button type="button" class="btn btn-primary" @click="start" :disabled="running">Start</button>
-          <span v-if="countDown">Time: {{countDown}}</span>
+          <span v-if="countDown > 0 ">Time: {{countDown}}</span>
           <span v-if="total_score">Total: {{total_score}}</span>
           <span v-if="score >= 0">Score: {{score}}</span>
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            {{clientid}}
+          </button>
         </h1>
       </div>
       <div id="words">  
         <div v-for="(word, i) in words">
-          <span :class="{ invalid: results && results[word] == 0 }" class="float-none">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">Remove</button>
+          <span :class="{ duplicate: results && results[word] == 0, 'text-warning': validity && validity[word] == 0, 'text-danger': validity && validity[word] == -1 }" class="float-none">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">Remove</button>
         </div>
       </div>
       <table id="board">
