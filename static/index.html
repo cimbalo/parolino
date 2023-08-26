@@ -408,6 +408,10 @@
               {{word}}
             </span>
             <span class="badge bg-primary" v-if="results[username] && results[username][word] > 0">{{results[username][word]}}</span>
+            <span class="badge bg-danger" v-if="validity && validity[word] < 0">
+              <i class="fa-solid fa-heart"></i>
+              {{validity[word]}}
+            </span>
           </div>
           <div class="col text-end pt-4">
             <button class="btn btn-danger" v-on:click="removeElement(word)">Remove</button>
