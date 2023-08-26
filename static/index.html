@@ -143,7 +143,7 @@
       sockets: {
         connect() {
           console.log('socket connected');
-          socket.emit("join", "public");
+          socket.emit("join", this.clientid, this.room);
         },
         board(board, running) {
           this.board = board;
@@ -189,8 +189,11 @@
         },
       },
       methods: {
-          start() {
+        start() {
             socket.emit('start');
+          },
+          reset() {
+            socket.emit('reset');
           },
           getTouches(evt) {
             return evt.touches ||             // browser API
@@ -302,9 +305,11 @@
               // Set the secret key in the component's data
               return base64SecretKey;
           },
-          updateClientid(event) {
+          updateSettings(event) {
             localStorage.clientid = this.clientid;
+            localStorage.room = this.room;
             this.$forceUpdate();
+            socket.emit("join", this.clientid, this.room);
           },
       },
       created: function () {
@@ -322,6 +327,10 @@
           localStorage.clientid = this.generateSecretKey();
         }
         this.clientid = localStorage.clientid;
+        if (!localStorage.room) {
+          localStorage.room = "public";
+        }
+        this.room = localStorage.room;
         console.log("ClientID ", this.clientid)
       },
 
@@ -330,17 +339,23 @@
   </head>
   <body>
     <div id="app">
-      <div class="modal fade" id="usernameModal" tabindex="-1" aria-labelledby="usernameModalLabel" aria-hidden="true">
+      <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="usernameModalLabel">Username</h1>
+              <h1 class="modal-title fs-5" id="settingsModalLabel">Settings</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <input type="text" class="form-control" id="username" v-model="clientid" v-on:change="updateClientid">
+                <label for="exampleInputPassword1" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" v-model="clientid" v-on:change="updateSettings">
               </div>
+              <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Room</label>
+                <input type="text" class="form-control" id="room" v-model="room" v-on:change="updateSettings">
+              </div>
+              <button type="button" class="btn btn-primary" @click="reset" :disabled="running" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .3rem; --bs-btn-font-size: .55rem;">Reset scores</button>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
@@ -350,7 +365,7 @@
       </div>
       <div>
         <h6 class="mt-1">
-          <button type="button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#usernameModal" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
+          <button type="button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#settingsModal" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
             <i class="fa fa-bars"></i>
           </button>
           <div class="row">

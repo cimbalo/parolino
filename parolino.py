@@ -52,7 +52,6 @@ def roll_dice():
     return results
 
 class Game():
-    room = "public"
     letters = []
     running = False
     words = {}
@@ -60,6 +59,9 @@ class Game():
     validity = {}
     scores = {}
     round = -1
+
+    def __init__(self, room):
+        self.room = room
 
     def new_round(self):
         self.round += 1
@@ -112,11 +114,6 @@ class Game():
 def home():
     return app.send_static_file('index.html')
 
-@app.route('/reset')
-def reset():
-    app.games[app.clients[request.sid]]= Game()
-    return "ok"
-
 @socketio.on('connect')
 def connect():
     print("connected")
@@ -125,38 +122,46 @@ def connect():
 def disconnect():
     print("disconnect")
     send_result()
-    if request.sid in app.clients:
-        del app.clients[request.sid]
+    if request.sid in app.clients_room:
+        del app.clients_room[request.sid]
 
 @socketio.on('join')
-def join(room):
+def join(username, room):
+    if request.sid in app.clients_room:
+        leave_room(room)
     join_room(room)
-    app.clients[request.sid] = room
+    app.clients_room[request.sid] = room
+    app.clients[request.sid] = username
     if room not in app.games:
-        app.games[room] = Game()
-    emit('board', (app.games[app.clients[request.sid]].letters, app.games[app.clients[request.sid]].running), to=app.clients[request.sid])
+        app.games[room] = Game(room)
+    emit('board', (app.games[app.clients_room[request.sid]].letters, app.games[app.clients_room[request.sid]].running), to=app.clients_room[request.sid])
     send_result()
 
 @socketio.on('start')
 def start():
-    app.games[app.clients[request.sid]].new_round()
-    socketio.start_background_task(app.games[app.clients[request.sid]].background_thread)
-    socketio.emit('board', (app.games[app.clients[request.sid]].letters, app.games[app.clients[request.sid]].running), to=app.clients[request.sid])
+    app.games[app.clients_room[request.sid]].new_round()
+    socketio.start_background_task(app.games[app.clients_room[request.sid]].background_thread)
+    socketio.emit('board', (app.games[app.clients_room[request.sid]].letters, app.games[app.clients_room[request.sid]].running), to=app.clients_room[request.sid])
+
+@socketio.on('reset')
+def reset():
+    app.games[app.clients_room[request.sid]] = Game(app.clients_room[request.sid])
 
 @socketio.on('send')
 def send(sid, words):
-    app.games[app.clients[request.sid]].words[sid] = words
+    app.games[app.clients_room[request.sid]].words[sid] = words
     # print(words)
-    app.games[app.clients[request.sid]].calculate_results()
+    app.games[app.clients_room[request.sid]].calculate_results()
     send_result()
 
 def send_result():
-    socketio.emit('results', (json.dumps(app.games[app.clients[request.sid]].results), json.dumps(app.games[app.clients[request.sid]].validity), json.dumps(app.games[app.clients[request.sid]].scores)), to=app.clients[request.sid])
+    socketio.emit('results', (json.dumps(app.games[app.clients_room[request.sid]].results), json.dumps(app.games[app.clients_room[request.sid]].validity), json.dumps(app.games[app.clients_room[request.sid]].scores)), to=app.clients_room[request.sid])
    
 if __name__ == "__main__":
     # import logging
     # logging.basicConfig()
     # logging.getLogger().setLevel(logging.DEBUG)
+    app.clients_room = {}
     app.clients = {}
     app.games = {}
     socketio.run(app, host="0.0.0.0", port=5001, debug=True)
