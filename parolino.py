@@ -143,7 +143,6 @@ def disconnect():
 
 @socketio.on('join')
 def join(username, room):
-    print(f'user "{username}" joined room "{room}"')
     if request.sid in app.clients_room:
         leave_room(room)
     join_room(room)
@@ -153,19 +152,21 @@ def join(username, room):
         app.games[room] = Game(room)
     emit('board', (app.games[app.clients_room[request.sid]].letters, app.games[app.clients_room[request.sid]].running), to=app.clients_room[request.sid])
     send_result()
+    print(f'user "{username}" joined room "{room}"')
 
 @socketio.on('start')
 def start():
     app.games[app.clients_room[request.sid]].new_round()
     socketio.start_background_task(app.games[app.clients_room[request.sid]].background_thread)
     socketio.emit('board', (app.games[app.clients_room[request.sid]].letters, app.games[app.clients_room[request.sid]].running), to=app.clients_room[request.sid])
+    print(f'user "{app.clients[request.sid]}" started new round for room "{app.clients_room[request.sid]}"')
 
 @socketio.on('reset')
 def reset():
     app.games[app.clients_room[request.sid]] = Game(app.clients_room[request.sid])
     socketio.emit('board', (app.games[app.clients_room[request.sid]].letters, app.games[app.clients_room[request.sid]].running), to=app.clients_room[request.sid])
     send_result()
-    print(f"reset {app.clients_room[request.sid]}")
+    print(f'user "{app.clients[request.sid]}" resetted room "{app.clients_room[request.sid]}"')
 
 @socketio.on('send')
 def send(words):
@@ -177,7 +178,6 @@ def send(words):
 @socketio.on('votes')
 def send(votes):
     app.games[app.clients_room[request.sid]].votes[app.clients[request.sid]] = votes
-    # print(words)
     app.games[app.clients_room[request.sid]].calculate_results()
     send_result()
 
