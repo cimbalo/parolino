@@ -94,9 +94,8 @@
         font-size: 3svw;
       }
       #words button{
-        font-size: 2.5vw;
-        font-size: 2.5svw;
-        margin-right: 10px;
+        font-size: 3vw;
+        font-size: 3svw;
       }
     }
     #board td div div{
@@ -134,16 +133,16 @@
           countDown: 0,
           results: {},
           validity: {},
-          score: 0,
+          score: -1,
           scores: null,
-          total_score: null,
           pathStarted: false,
+          votes: {},
         }
       },
       sockets: {
         connect() {
           console.log('socket connected');
-          socket.emit("join", this.clientid, this.room);
+          socket.emit("join", this.username, this.room);
         },
         board(board, running) {
           this.board = board;
@@ -173,19 +172,18 @@
         },
         results(results, validity, scores) {
           this.validity = JSON.parse(validity)
-          if (!app.running){
-            this.results = JSON.parse(results)[this.clientid];
+          this.scores = JSON.parse(scores)
+          if (!this.running){
+            this.results = JSON.parse(results)
           }
-          this.scores = JSON.parse(scores)[this.clientid];
-          if (this.scores){
-            this.total_score = 0;
-            for (var score of this.scores){
-              if (score){
-                this.total_score += parseInt(score);
-              }
-            };
-            this.score = this.scores[this.scores.length -1];
+          if (this.scores[this.username]){
+            this.score = this.scores[this.username][0]
+          }else{
+            this.score = -1;
           }
+          console.log(this.results)
+          console.log(this.scores)
+          console.log(this.score)
         },
       },
       methods: {
@@ -280,7 +278,7 @@
             if (this.countDown <= 0){
               navigator.vibrate(1000);
               this.words.sort();
-              socket.emit('send', this.clientid, this.words);
+              socket.emit('send', this.words);
             } else if (this.countDown > 0) {
               this.counterId = setTimeout(() => {
                 this.countDown -= 1
@@ -291,7 +289,7 @@
           removeElement : function(word){
             this.words.splice(this.words.indexOf(word), 1);
             if (!this.running){
-              socket.emit('send', this.clientid, this.words);
+              socket.emit('send', this.words);
             }
           },
           generateSecretKey() {
@@ -306,10 +304,24 @@
               return base64SecretKey;
           },
           updateSettings(event) {
-            localStorage.clientid = this.clientid;
+            localStorage.username = this.username;
             localStorage.room = this.room;
             this.$forceUpdate();
-            socket.emit("join", this.clientid, this.room);
+            socket.emit("join", this.username, this.room);
+          },
+          vote(word) {
+            if (this.votes[word] == undefined){
+              this.votes[word] = false;
+            } else if (this.votes[word] == false){
+              this.votes[word] = true;
+            } else if (this.votes[word] == true){
+              delete this.votes[word];
+            }
+            // localStorage.words = JSON.stringify(this.votes);
+            this.$forceUpdate();
+            if (!this.running){
+              socket.emit('votes', this.votes);
+            }
           },
       },
       created: function () {
@@ -323,15 +335,15 @@
         document.addEventListener('mousedown', this.handleTouchStart, false);
         document.addEventListener('mousemove', this.handleTouchMove, false);
         document.addEventListener('mouseup', this.handleTouchEnd, false);
-        if (!localStorage.clientid) {
-          localStorage.clientid = this.generateSecretKey();
+        if (!localStorage.username) {
+          localStorage.username = this.generateSecretKey();
         }
-        this.clientid = localStorage.clientid;
+        this.username = localStorage.username;
         if (!localStorage.room) {
           localStorage.room = "public";
         }
         this.room = localStorage.room;
-        console.log("ClientID ", this.clientid)
+        console.log("username ", this.username)
       },
 
     })
@@ -349,7 +361,7 @@
             <div class="modal-body">
               <div class="mb-3">
                 <label for="exampleInputPassword1" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" v-model="clientid" v-on:change="updateSettings">
+                <input type="text" class="form-control" id="username" v-model="username" v-on:change="updateSettings">
               </div>
               <div class="mb-3">
                 <label for="exampleInputPassword1" class="form-label">Room</label>
@@ -378,28 +390,58 @@
             <div class="col nopadding" v-if="score >= 0">
               Score: {{score}}
             </div>
-            <div class="col nopadding" v-if="total_score">
-              Total: {{total_score}}
+            <div class="col nopadding" v-if="scores && scores.hasOwnProperty(username)">
+              Total: {{scores[username][1]}}
             </div>
           </div>
         </h6>
       </div>
-      <div id="words">  
+      <div id="words">
+        <h3 v-if="results[username]"><b>{{username}}</b></h3>
         <div class="row nopadding" v-for="(word, i) in words">
           <div class="col">
-            <span :class="{ 'text-muted': results && results[word] == 0,
-                          duplicate: results && results[word] == 0,
-                            'text-warning': validity && validity[word] == 0 && results && results[word] != 0,
-                            'text-danger': validity && validity[word] == -1 && results && results[word] != 0}"
+            <span :class="{ 'text-muted': results[username] && results[username][word] == 0,
+                            duplicate: results[username] && results[username][word] == 0,
+                            'text-warning': validity && validity[word] == 0 && results[username] && results[username][word] != 0,
+                            'text-danger': validity && validity[word] < 0 && results[username] && results[username][word] != 0 }"
                             class="float-none">
               {{word}}
             </span>
-            <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span>
+            <span class="badge bg-primary" v-if="results[username] && results[username][word] > 0">{{results[username][word]}}</span>
           </div>
           <div class="col text-end pt-4">
             <button class="btn btn-danger" v-on:click="removeElement(word)">Remove</button>
           </div>
         </div>
+        <div v-for="key in Object.keys(results)" v-if="key!=username">
+          <h3 v-if="results[key]"><b>{{key}}</b> ({{scores[key][1]}})</h3>
+          <div class="row nopadding" v-for="(word, i) in Object.keys(results[key])">
+            <div class="col">
+              <span :class="{ 'text-muted': results[key] && results[key][word] == 0,
+                              duplicate: results[key] && results[key][word] == 0,
+                              'text-warning': validity && validity[word] == 0 && results[key] && results[key][word] != 0,
+                              'text-danger': validity && validity[word] < 0 && results[key] && results[key][word] != 0 }"
+                              class="float-none">
+                {{word}}
+              </span>
+            </div>
+            <div class="col text-end pt-4">
+              <button type="button" :class="{
+                'btn-success': votes[word] == true,
+                'btn-danger': votes[word] == false,
+                'btn-secondary': votes[word] == undefined,
+                }" class="btn float-end" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: 1.5rem; --bs-btn-font-size: .75rem;"
+                v-on:click="vote(word)"
+                v-if="results[key] && results[key][word] != 0"
+                >
+                <i class="fa-regular fa-face-smile-beam" v-if="votes[word] == true"></i>
+                <i class="fa-regular fa-face-meh" v-if="votes[word] == undefined"></i>
+                <i class="fa-regular fa-face-angry" v-if="votes[word] == false"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
       <table id="board">
         <template v-for="(row, i) in board">

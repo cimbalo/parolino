@@ -51,24 +51,34 @@ def roll_dice():
     results = [results[i:i + 4] for i in range(0, len(results), 4)]
     return results
 
+def check_dictionary(word):
+    if dictionary.check(word) or dictionary.check(word + u'\u0300') or dictionary.check(word + u'\u0301'):
+        return 1
+    else:
+        return 0
+
 class Game():
-    letters = []
-    running = False
-    words = {}
-    results = {}
-    validity = {}
-    scores = {}
-    round = -1
 
     def __init__(self, room):
         self.room = room
+        self.round = -1
+        self.words = {}
+        self.letters = []
+        self.running = False
+        self.results = {}
+        self.validity = {}
+        self.scores = {}
+        self.votes = {}
 
     def new_round(self):
         self.round += 1
+        self.words = {}
         self.letters = roll_dice()
         self.running = time.time() + DURATION
         self.results = {}
         self.validity = {}
+        self.scores = {}
+        self.votes = {}
 
     def background_thread(self):
         socketio.sleep(DURATION)
@@ -76,37 +86,44 @@ class Game():
         socketio.emit('board', (self.letters, self.running), to=self.room)
         print("stopping")
 
+    def calculate_votes(self, word):
+        vote = 0
+        for key in self.votes.keys():
+            if word in self.votes[key]:
+                vote += 1 if self.votes[key][word] else -1
+        if vote < 0:
+            self.validity[word] = vote
+        else:
+            self.validity[word] = check_dictionary(word)
+
     def calculate_results(self):
         # print(app.words)
         all_words = [word for v in self.words.values() for word in v ]
-        for word in set(all_words):
-            if word not in self.validity:
-                if dictionary.check(word) or dictionary.check(word + u'\u0300') or dictionary.check(word + u'\u0301'):
-                    self.validity[word] = 1
-                else:
-                    self.validity[word] = 0
+        # for word in set(all_words):
+        #     if word not in self.validity:
+                
         unique = []
         for word in set(all_words):
             if all_words.count(word) == 1:
                 unique.append(word)
         for k, v in self.words.items():
-            self.results[k] = {}
+            if k not in self.results:
+                self.results[k] = {}
+            partial = 0
             for word in v:
-                if word in unique:
+                self.calculate_votes(word)
+                if word in unique and self.validity[word] >= 0:
                     self.results[k][word] = points(word)
+                    partial += self.results[k][word]
+                elif self.validity[word] < 0:
+                    self.results[k][word] = self.validity[word]
                 else:
                     self.results[k][word] = 0
-        
-        if self.round >= 0:
-            for k, v in self.results.items():
-                if k not in self.scores:
-                    self.scores[k] = []
-                partial = 0
-                for i in range(len(self.scores[k]), self.round + 1):
-                    self.scores[k].append(None)
-                for word, score in v.items():
-                    partial += score
-                self.scores[k][self.round] = partial
+            if k not in self.scores:
+                self.scores[k] = []
+            for i in range(len(self.scores[k]), self.round + 1):
+                self.scores[k].append(None)
+            self.scores[k][self.round] = partial
             print(self.round, self.scores)
         # print(app.results)
 
@@ -121,7 +138,6 @@ def connect():
 @socketio.on('disconnect')
 def disconnect():
     print("disconnect")
-    send_result()
     if request.sid in app.clients_room:
         del app.clients_room[request.sid]
 
@@ -146,16 +162,30 @@ def start():
 @socketio.on('reset')
 def reset():
     app.games[app.clients_room[request.sid]] = Game(app.clients_room[request.sid])
+    socketio.emit('board', (app.games[app.clients_room[request.sid]].letters, app.games[app.clients_room[request.sid]].running), to=app.clients_room[request.sid])
+    send_result()
+    print(f"reset {app.clients_room[request.sid]}")
 
 @socketio.on('send')
-def send(sid, words):
-    app.games[app.clients_room[request.sid]].words[sid] = words
+def send(words):
+    app.games[app.clients_room[request.sid]].words[app.clients[request.sid]] = words
+    # print(words)
+    app.games[app.clients_room[request.sid]].calculate_results()
+    send_result()
+
+@socketio.on('votes')
+def send(votes):
+    app.games[app.clients_room[request.sid]].votes[app.clients[request.sid]] = votes
     # print(words)
     app.games[app.clients_room[request.sid]].calculate_results()
     send_result()
 
 def send_result():
-    socketio.emit('results', (json.dumps(app.games[app.clients_room[request.sid]].results), json.dumps(app.games[app.clients_room[request.sid]].validity), json.dumps(app.games[app.clients_room[request.sid]].scores)), to=app.clients_room[request.sid])
+    socketio.emit('results',
+                  (json.dumps(app.games[app.clients_room[request.sid]].results),
+                  json.dumps(app.games[app.clients_room[request.sid]].validity),
+                  json.dumps({k: (v[-1], sum(filter(None, v))) for k, v in app.games[app.clients_room[request.sid]].scores.items()})),
+                  to=app.clients_room[request.sid])
    
 if __name__ == "__main__":
     # import logging
