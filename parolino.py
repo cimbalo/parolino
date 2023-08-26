@@ -137,9 +137,10 @@ def connect():
 
 @socketio.on('disconnect')
 def disconnect():
-    print("disconnect")
+    print(f'user "{app.clients[request.sid]}" disconnected from room "{app.clients_room[request.sid]}"')
     if request.sid in app.clients_room:
         del app.clients_room[request.sid]
+
 
 @socketio.on('join')
 def join(username, room):
