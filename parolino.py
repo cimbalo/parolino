@@ -143,6 +143,7 @@ def disconnect():
 
 @socketio.on('join')
 def join(username, room):
+    print(f'user "{username}" joined room "{room}"')
     if request.sid in app.clients_room:
         leave_room(room)
     join_room(room)
