@@ -142,7 +142,8 @@
       },
       sockets: {
         connect() {
-          console.log('socket connected')
+          console.log('socket connected');
+          socket.emit("join", "public");
         },
         board(board, running) {
           this.board = board;
