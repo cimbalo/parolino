@@ -40,12 +40,21 @@
         width: 22svh;
         text-align: center;
       }
+      #board td:first-child:nth-last-child(5),
+      #board td:first-child:nth-last-child(5) ~ td {
+        font-size: 8vh;
+        height: 17vh;
+        width: 17vh;
+        font-size: 8svh;
+        height: 17svh;
+        width: 17svh;
+      }
       #words {
         float: left;
         height: calc(100vh - 2.5rem);
-        width: calc(100vw - 106vh);
+        width: calc(100vw - 108vh);
         height: calc(100svh - 2.5rem);
-        width: calc(100svw - 106svh);
+        width: calc(100svw - 108svh);
         overflow: scroll;
       }
       #words span{
@@ -78,10 +87,19 @@
         width: 22svw;
         text-align: center;
       }
+      #board td:first-child:nth-last-child(5),
+      #board td:first-child:nth-last-child(5) ~ td {
+        font-size: 8vw;
+        height: 18vw;
+        width: 18vw;
+        font-size: 8svw;
+        height: 18svw;
+        width: 18svw;
+      }
       #words {
         float: left;
-        height: calc(100vh - 92vw);
-        height: calc(100svh - 92svw);
+        height: calc(100vh - 96vw);
+        height: calc(100svh - 96svw);
         width: 100%;
         overflow: scroll;
       }
@@ -98,10 +116,9 @@
         font-size: 3svw;
       }
     }
-    #board td div div{
-      vertical-align: middle;
-      text-align: center;
-      display: table-cell;
+    #board td {
+      border: solid 1px;
+        border-color: lightgray;
     }
     #board td.selected{
       background-color: paleturquoise;
@@ -137,6 +154,7 @@
           scores: null,
           pathStarted: false,
           votes: {},
+          size: null,
         }
       },
       sockets: {
@@ -144,8 +162,9 @@
           console.log('socket connected');
           socket.emit("join", this.username, this.room);
         },
-        board(board, running) {
+        board(board, running, size) {
           this.board = board;
+          this.size = size;
           if (localStorage.words) {
             if (JSON.parse(localStorage.words).hasOwnProperty(this.board)){
               this.words = JSON.parse(localStorage.words)[this.board];
@@ -181,9 +200,6 @@
           }else{
             this.score = -1;
           }
-          console.log(this.results)
-          console.log(this.scores)
-          console.log(this.score)
         },
       },
       methods: {
@@ -307,7 +323,9 @@
             localStorage.username = this.username;
             localStorage.room = this.room;
             this.$forceUpdate();
+            var size = this.size;
             socket.emit("join", this.username, this.room);
+            socket.emit("size", size);
           },
           vote(word) {
             if (this.votes[word] == undefined){
@@ -360,12 +378,20 @@
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Username</label>
+                <label for="username" class="form-label">Username</label>
                 <input type="text" class="form-control" id="username" v-model="username" v-on:change="updateSettings">
               </div>
               <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Room</label>
+                <label for="room" class="form-label">Room</label>
                 <input type="text" class="form-control" id="room" v-model="room" v-on:change="updateSettings">
+              </div>
+              <div class="mb-3">
+                <label for="size" class="form-label">Board size</label>
+                <select class="form-select" id="size" v-model="size" v-on:change="updateSettings">
+                  <option value="4">4x4</option>
+                  <option value="5">5x5</option>
+                </select>
+          
               </div>
               <button type="button" class="btn btn-primary" @click="reset" :disabled="running" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .3rem; --bs-btn-font-size: .55rem;">Reset scores</button>
             </div>
