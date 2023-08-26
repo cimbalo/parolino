@@ -385,8 +385,20 @@
         </h6>
       </div>
       <div id="words">  
-        <div v-for="(word, i) in words">
-          <span :class="{ duplicate: results && results[word] == 0, 'text-warning': validity && validity[word] == 0 && results && results[word] != 0, 'text-danger': validity && validity[word] == -1 && results && results[word] != 0}" class="float-none">{{word}} <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span></span><button class="btn btn-danger float-end" v-on:click="removeElement(word)">Remove</button>
+        <div class="row nopadding" v-for="(word, i) in words">
+          <div class="col">
+            <span :class="{ 'text-muted': results && results[word] == 0,
+                          duplicate: results && results[word] == 0,
+                            'text-warning': validity && validity[word] == 0 && results && results[word] != 0,
+                            'text-danger': validity && validity[word] == -1 && results && results[word] != 0}"
+                            class="float-none">
+              {{word}}
+            </span>
+            <span class="badge bg-primary" v-if="results && results[word]">{{results[word]}}</span>
+          </div>
+          <div class="col text-end pt-4">
+            <button class="btn btn-danger" v-on:click="removeElement(word)">Remove</button>
+          </div>
         </div>
       </div>
       <table id="board">
