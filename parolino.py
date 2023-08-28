@@ -91,7 +91,7 @@ class Game():
         self.words = {}
         self.letters = []
         self.running = False
-        self.results = {}
+        self.results = OrderedDict()
         self.validity = {}
         self.scores = {}
         self.votes = {}
@@ -102,7 +102,7 @@ class Game():
         self.words = {}
         self.letters = roll_dice(self.size)
         self.running = time.time() + DURATION
-        self.results = {}
+        self.results = OrderedDict()
         self.validity = {}
         self.votes = {}
 
@@ -133,7 +133,7 @@ class Game():
             for word in set(all_words):
                 if all_words.count(word) == 1:
                     unique.append(word)
-            for k, v in self.words.items():
+            for k, v in sorted(self.words.items()):
                 if k not in self.results:
                     self.results[k] = OrderedDict()
                 partial = 0
