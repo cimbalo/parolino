@@ -103,7 +103,6 @@ class Game():
         self.running = time.time() + DURATION
         self.results = {}
         self.validity = {}
-        self.scores = {}
         self.votes = {}
 
     def background_thread(self):
@@ -151,7 +150,6 @@ class Game():
                 for i in range(len(self.scores[k]), self.round + 1):
                     self.scores[k].append(None)
                 self.scores[k][self.round] = partial
-                print(self.round, self.scores)
             # print(app.results)
 
 @app.route('/')
