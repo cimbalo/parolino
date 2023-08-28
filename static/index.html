@@ -172,6 +172,13 @@
               this.words = [];
             }
           }
+
+          if (localStorage.votes) {
+            if (JSON.parse(localStorage.votes).hasOwnProperty(this.board)){
+              this.votes = JSON.parse(localStorage.votes)[this.board];
+            }
+          }
+          
           console.log("running "+running)
           this.running = running;
           if (this.running){
@@ -332,17 +339,16 @@
               socket.emit("size", this.size);
             }
           },
-          vote(word) {
-            if (this.votes[word] == undefined){
-              this.votes[word] = false;
-            } else if (this.votes[word] == false){
-              this.votes[word] = true;
-            } else if (this.votes[word] == true){
-              delete this.votes[word];
-            }
-            // localStorage.words = JSON.stringify(this.votes);
-            this.$forceUpdate();
+          vote(word, value) {
             if (!this.running){
+              if (this.votes[word] != value){
+                this.votes[word] = value;
+              } else {
+                delete this.votes[word];
+              }
+              let votes = {};
+              votes[this.board] = this.votes;
+              localStorage.votes = JSON.stringify(votes);
               socket.emit('votes', this.votes);
             }
           },
@@ -428,7 +434,7 @@
         </h6>
       </div>
       <div id="words">
-        <h3 v-if="results[username]"><b>{{username}}</b></h3>
+        <h3 v-if="results[username]"><b>{{username}}</b> {{scores[username][0]}} ({{scores[username][1]}})</h3>
         <div class="row nopadding" v-for="(word, i) in words">
           <div class="col">
             <span :class="{ 'text-muted': results[username] && results[username][word] == 0,
@@ -438,8 +444,8 @@
                             class="float-none">
               {{word}}
             </span>
-            <span class="badge bg-primary" v-if="results[username] && results[username][word] > 0">{{results[username][word]}}</span>
-            <span class="badge bg-danger" v-if="validity && validity[word] < 0">
+            <span class="badge badge-pill bg-primary" v-if="results[username] && results[username][word] > 0">{{results[username][word]}}</span>
+            <span class="badge badge-pill bg-danger" v-if="validity && validity[word] < 0">
               <i class="fa-solid fa-heart"></i>
               {{validity[word]}}
             </span>
@@ -449,7 +455,7 @@
           </div>
         </div>
         <div v-for="key in Object.keys(results)" v-if="key!=username">
-          <h3 v-if="results[key]"><b>{{key}}</b> ({{scores[key][1]}})</h3>
+          <h3 v-if="results[key]"><b>{{key}}</b> {{scores[key][0]}} ({{scores[key][1]}})</h3>
           <div class="row nopadding" v-for="(word, i) in Object.keys(results[key])">
             <div class="col">
               <span :class="{ 'text-muted': results[key] && results[key][word] == 0,
@@ -459,19 +465,27 @@
                               class="float-none">
                 {{word}}
               </span>
+              <span class="badge badge-pill bg-danger" v-if="validity && validity[word] < 0">
+                <i class="fa-solid fa-heart"></i>
+                {{validity[word]}}
+              </span>
             </div>
             <div class="col text-end pt-4">
               <button type="button" :class="{
                 'btn-success': votes[word] == true,
-                'btn-danger': votes[word] == false,
-                'btn-secondary': votes[word] == undefined,
                 }" class="btn float-end" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: 1.5rem; --bs-btn-font-size: .75rem;"
-                v-on:click="vote(word)"
+                v-on:click="vote(word, true)"
                 v-if="results[key] && results[key][word] != 0"
                 >
-                <i class="fa-regular fa-face-smile-beam" v-if="votes[word] == true"></i>
-                <i class="fa-regular fa-face-meh" v-if="votes[word] == undefined"></i>
-                <i class="fa-regular fa-face-angry" v-if="votes[word] == false"></i>
+                <i class="fa-regular fa-thumbs-up"></i>
+              </button>
+              <button type="button" :class="{
+                'btn-danger': votes[word] == false,
+                }" class="btn float-end" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: 1.5rem; --bs-btn-font-size: .75rem;"
+                v-on:click="vote(word, false)"
+                v-if="results[key] && results[key][word] != 0"
+                >
+                <i class="fa-regular fa-thumbs-down"></i>
               </button>
             </div>
           </div>

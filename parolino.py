@@ -4,6 +4,7 @@ import random
 import json
 from flask import Flask, url_for, redirect, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from collections import OrderedDict
 import enchant
 # random.seed(42)
 
@@ -134,9 +135,9 @@ class Game():
                     unique.append(word)
             for k, v in self.words.items():
                 if k not in self.results:
-                    self.results[k] = {}
+                    self.results[k] = OrderedDict()
                 partial = 0
-                for word in v:
+                for word in sorted(v):
                     self.calculate_votes(word)
                     if word in unique and self.validity[word] >= 0:
                         self.results[k][word] = points(word)
