@@ -130,6 +130,8 @@ class Game():
             #     if word not in self.validity:
                     
             unique = []
+            self.results = {}
+            self.validity = {}
             for word in set(all_words):
                 if all_words.count(word) == 1:
                     unique.append(word)
