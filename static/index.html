@@ -319,13 +319,18 @@
               // Set the secret key in the component's data
               return base64SecretKey;
           },
-          updateSettings(event) {
-            localStorage.username = this.username;
-            localStorage.room = this.room;
-            this.$forceUpdate();
-            var size = this.size;
-            socket.emit("join", this.username, this.room);
-            socket.emit("size", size);
+          updateSettings(key) {
+            if (key == 'username'){
+              localStorage.username = this.username;
+              this.$forceUpdate();
+            }
+            if (key == 'room'){
+              localStorage.room = this.room;
+              socket.emit("join", this.username, this.room);
+            }
+            if (key == 'size'){
+              socket.emit("size", this.size);
+            }
           },
           vote(word) {
             if (this.votes[word] == undefined){
@@ -379,15 +384,15 @@
             <div class="modal-body">
               <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" v-model="username" v-on:change="updateSettings">
+                <input type="text" class="form-control" id="username" v-model="username" v-on:change="updateSettings('username')">
               </div>
               <div class="mb-3">
                 <label for="room" class="form-label">Room</label>
-                <input type="text" class="form-control" id="room" v-model="room" v-on:change="updateSettings">
+                <input type="text" class="form-control" id="room" v-model="room" v-on:change="updateSettings('room')">
               </div>
               <div class="mb-3">
                 <label for="size" class="form-label">Board size</label>
-                <select class="form-select" id="size" v-model="size" v-on:change="updateSettings">
+                <select class="form-select" id="size" v-model="size" v-on:change="updateSettings('size')">
                   <option value="4">4x4</option>
                   <option value="5">5x5</option>
                 </select>
