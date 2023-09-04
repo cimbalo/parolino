@@ -443,6 +443,7 @@
                             'text-danger': validity && validity[word] < 0 && results[username] && results[username][word] != 0 }"
                             class="float-none">
               {{word}}
+              <a :href="`https://www.treccani.it/vocabolario/ricerca/${word}/`" target="_blank" v-if="!running"><i class="fa-solid fa-circle-info text-secondary"></i></a>
             </span>
             <span class="badge badge-pill bg-primary" v-if="results[username] && results[username][word] > 0">{{results[username][word]}}</span>
             <span class="badge badge-pill bg-danger" v-if="validity && validity[word] < 0">
@@ -464,6 +465,7 @@
                               'text-danger': validity && validity[word] < 0 && results[key] && results[key][word] != 0 }"
                               class="float-none">
                 {{word}}
+                <a :href="`https://www.treccani.it/vocabolario/ricerca/${word}/`" target="_blank" v-if="!running"><i class="fa-solid fa-circle-info text-secondary"></i></a>
               </span>
               <span class="badge badge-pill bg-danger" v-if="validity && validity[word] < 0">
                 <i class="fa-solid fa-heart"></i>
