@@ -289,7 +289,7 @@
                 this.words.unshift(newword);
                 let words = {};
                 words[this.board] = this.words;
-                localStorage.words = JSON.stringify(words);
+                localStorage.setItem('words', JSON.stringify(words));
               }
             }
           },
@@ -329,11 +329,11 @@
           },
           updateSettings(key) {
             if (key == 'username'){
-              localStorage.username = this.username;
+              localStorage.setItem('username', this.username);
               this.$forceUpdate();
             }
             if (key == 'room'){
-              localStorage.room = this.room;
+              localStorage.setItem('room', this.room);
               socket.emit("join", this.username, this.room);
             }
             if (key == 'size'){
@@ -349,7 +349,7 @@
               }
               let votes = {};
               votes[this.board] = this.votes;
-              localStorage.votes = JSON.stringify(votes);
+              localStorage.setItem('votes', JSON.stringify(votes));
               socket.emit('votes', this.votes);
             }
           },
@@ -366,11 +366,11 @@
         document.addEventListener('mousemove', this.handleTouchMove, false);
         document.addEventListener('mouseup', this.handleTouchEnd, false);
         if (!localStorage.username) {
-          localStorage.username = this.generateSecretKey();
+          localStorage.setItem('username', this.generateSecretKey());
         }
         this.username = localStorage.username;
         if (!localStorage.room) {
-          localStorage.room = "public";
+          localStorage.setItem('room', "public");
         }
         this.room = localStorage.room;
         console.log("username ", this.username)
