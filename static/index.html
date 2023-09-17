@@ -166,17 +166,17 @@
         board(board, running, size) {
           this.board = board;
           this.size = size;
-          if (localStorage.words) {
-            if (JSON.parse(localStorage.words).hasOwnProperty(this.board)){
-              this.words = JSON.parse(localStorage.words)[this.board];
+          if (localStorage.getItem('words')) {
+            if (JSON.parse(localStorage.getItem('words')).hasOwnProperty(this.board)){
+              this.words = JSON.parse(localStorage.getItem('words'))[this.board];
             }else{
               this.words = [];
             }
           }
 
-          if (localStorage.votes) {
-            if (JSON.parse(localStorage.votes).hasOwnProperty(this.board)){
-              this.votes = JSON.parse(localStorage.votes)[this.board];
+          if (localStorage.getItem('votes')) {
+            if (JSON.parse(localStorage.getItem('votes')).hasOwnProperty(this.board)){
+              this.votes = JSON.parse(localStorage.getItem('votes'))[this.board];
             }
           }
           
@@ -365,14 +365,14 @@
         document.addEventListener('mousedown', this.handleTouchStart, false);
         document.addEventListener('mousemove', this.handleTouchMove, false);
         document.addEventListener('mouseup', this.handleTouchEnd, false);
-        if (!localStorage.username) {
+        if (!localStorage.getItem('username')) {
           localStorage.setItem('username', this.generateSecretKey());
         }
-        this.username = localStorage.username;
-        if (!localStorage.room) {
+        this.username = localStorage.getItem('username');
+        if (!localStorage.getItem('room')) {
           localStorage.setItem('room', "public");
         }
-        this.room = localStorage.room;
+        this.room = localStorage.getItem('room');
         console.log("username ", this.username)
       },
 
