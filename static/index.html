@@ -261,7 +261,8 @@
             }
           },
           enableNoSleep(){
-            noSleep.enable();
+            // TODO notify user we could not request screen wake up lock
+            noSleep.enable()
             document.removeEventListener('touchstart', this.enableNoSleep, false);
           },
           handleTouchStart(evt) {
@@ -381,6 +382,8 @@
   </head>
   <body>
     <div id="app">
+
+      <!-- settings page -->
       <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
@@ -413,6 +416,8 @@
           </div>
         </div>
       </div>
+
+      <!-- game controls: start, settings, session score and total score -->
       <div>
         <h6 class="mt-1">
           <button type="button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#settingsModal" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
@@ -434,6 +439,8 @@
           </div>
         </h6>
       </div>
+      
+      <!-- current session words ->
       <div id="words">
         <h3 v-if="results[username]"><b>{{username}}</b> {{scores[username][0]}} ({{scores[username][1]}})</h3>
         <div class="row nopadding" v-for="(word, i) in words">
@@ -495,6 +502,8 @@
         </div>
 
       </div>
+
+      <!-- current session board -->
       <table id="board">
         <template v-for="(row, i) in board">
           <tr>
