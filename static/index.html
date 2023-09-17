@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html dir="ltr" lang="en">
 <head>
   <title>Parolino</title>
@@ -165,17 +166,17 @@
         board(board, running, size) {
           this.board = board;
           this.size = size;
-          if (localStorage.words) {
-            if (JSON.parse(localStorage.words).hasOwnProperty(this.board)){
-              this.words = JSON.parse(localStorage.words)[this.board];
+          if (localStorage.getItem('words')) {
+            if (JSON.parse(localStorage.getItem('words')).hasOwnProperty(this.board)){
+              this.words = JSON.parse(localStorage.getItem('words'))[this.board];
             }else{
               this.words = [];
             }
           }
 
-          if (localStorage.votes) {
-            if (JSON.parse(localStorage.votes).hasOwnProperty(this.board)){
-              this.votes = JSON.parse(localStorage.votes)[this.board];
+          if (localStorage.getItem('votes')) {
+            if (JSON.parse(localStorage.getItem('votes')).hasOwnProperty(this.board)){
+              this.votes = JSON.parse(localStorage.getItem('votes'))[this.board];
             }
           }
           
@@ -211,6 +212,7 @@
       },
       methods: {
         start() {
+            // TODO check navigator.userActivation and request vibration
             socket.emit('start');
           },
           reset() {
@@ -260,7 +262,8 @@
             }
           },
           enableNoSleep(){
-            noSleep.enable();
+            // TODO notify user we could not request screen wake up lock
+            noSleep.enable()
             document.removeEventListener('touchstart', this.enableNoSleep, false);
           },
           handleTouchStart(evt) {
@@ -288,7 +291,7 @@
                 this.words.unshift(newword);
                 let words = {};
                 words[this.board] = this.words;
-                localStorage.words = JSON.stringify(words);
+                localStorage.setItem('words', JSON.stringify(words));
               }
             }
           },
@@ -328,15 +331,19 @@
           },
           updateSettings(key) {
             if (key == 'username'){
-              localStorage.username = this.username;
+              localStorage.setItem('username', this.username);
               this.$forceUpdate();
             }
             if (key == 'room'){
-              localStorage.room = this.room;
+              localStorage.setItem('room', this.room);
               socket.emit("join", this.username, this.room);
             }
             if (key == 'size'){
               socket.emit("size", this.size);
+            }
+            // user settings do not need broadcast
+            if (key == 'vibrate') {
+              localStorage.setItem('vibrate', String(this.vibrate));
             }
           },
           vote(word, value) {
@@ -348,7 +355,7 @@
               }
               let votes = {};
               votes[this.board] = this.votes;
-              localStorage.votes = JSON.stringify(votes);
+              localStorage.setItem('votes', JSON.stringify(votes));
               socket.emit('votes', this.votes);
             }
           },
@@ -364,22 +371,30 @@
         document.addEventListener('mousedown', this.handleTouchStart, false);
         document.addEventListener('mousemove', this.handleTouchMove, false);
         document.addEventListener('mouseup', this.handleTouchEnd, false);
-        if (!localStorage.username) {
-          localStorage.username = this.generateSecretKey();
-        }
-        this.username = localStorage.username;
-        if (!localStorage.room) {
-          localStorage.room = "public";
-        }
-        this.room = localStorage.room;
-        console.log("username ", this.username)
-      },
 
+        // initialise localstorage to known good defaults
+        if (localStorage.getItem('username') == null) {
+          localStorage.setItem('username', this.generateSecretKey());
+        }
+        if (localStorage.getItem('room') == null) {
+          localStorage.setItem('room', "public");
+        }
+        if (localStorage.getItem('vibrate') == null) {
+          localStorage.setItem('vibrate', String(false));
+        }
+        
+        // finally bind app values to stored values
+        this.username = localStorage.getItem('username');
+        this.room = localStorage.getItem('room');
+        this.vibrate = Boolean(localStorage.getItem('vibrate'));
+      },
     })
   </script>
   </head>
   <body>
     <div id="app">
+
+      <!-- settings page -->
       <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
@@ -404,6 +419,10 @@
                 </select>
           
               </div>
+              <div class"mb-3">
+                <label for="vibrate" class="form-label">Vibrate</label>
+                <input type="checkbox" class="form-control" id="vibrate" v-model="vibrate" v-on:change="updateSettings('vibrate')">
+              <div>
               <button type="button" class="btn btn-primary" @click="reset" :disabled="running" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .3rem; --bs-btn-font-size: .55rem;">Reset scores</button>
             </div>
             <div class="modal-footer">
@@ -412,6 +431,8 @@
           </div>
         </div>
       </div>
+
+      <!-- game controls: start, settings, session score and total score -->
       <div>
         <h6 class="mt-1">
           <button type="button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#settingsModal" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
@@ -433,6 +454,8 @@
           </div>
         </h6>
       </div>
+      
+      <!-- current session words ->
       <div id="words">
         <h3 v-if="results[username]"><b>{{username}}</b> {{scores[username][0]}} ({{scores[username][1]}})</h3>
         <div class="row nopadding" v-for="(word, i) in words">
@@ -494,6 +517,8 @@
         </div>
 
       </div>
+
+      <!-- current session board -->
       <table id="board">
         <template v-for="(row, i) in board">
           <tr>
