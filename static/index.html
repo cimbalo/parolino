@@ -212,6 +212,7 @@
       },
       methods: {
         start() {
+            // TODO check navigator.userActivation and request vibration
             socket.emit('start');
           },
           reset() {
@@ -340,6 +341,10 @@
             if (key == 'size'){
               socket.emit("size", this.size);
             }
+            // user settings do not need broadcast
+            if (key == 'vibrate') {
+              localStorage.setItem('vibrate', String(this.vibrate));
+            }
           },
           vote(word, value) {
             if (!this.running){
@@ -366,17 +371,23 @@
         document.addEventListener('mousedown', this.handleTouchStart, false);
         document.addEventListener('mousemove', this.handleTouchMove, false);
         document.addEventListener('mouseup', this.handleTouchEnd, false);
-        if (!localStorage.getItem('username')) {
+
+        // initialise localstorage to known good defaults
+        if (localStorage.getItem('username') == null) {
           localStorage.setItem('username', this.generateSecretKey());
         }
-        this.username = localStorage.getItem('username');
-        if (!localStorage.getItem('room')) {
+        if (localStorage.getItem('room') == null) {
           localStorage.setItem('room', "public");
         }
+        if (localStorage.getItem('vibrate') == null) {
+          localStorage.setItem('vibrate', String(false));
+        }
+        
+        // finally bind app values to stored values
+        this.username = localStorage.getItem('username');
         this.room = localStorage.getItem('room');
-        console.log("username ", this.username)
+        this.vibrate = Boolean(localStorage.getItem('vibrate'));
       },
-
     })
   </script>
   </head>
@@ -408,6 +419,10 @@
                 </select>
           
               </div>
+              <div class"mb-3">
+                <label for="vibrate" class="form-label">Vibrate</label>
+                <input type="checkbox" class="form-control" id="vibrate" v-model="vibrate" v-on:change="updateSettings('vibrate')">
+              <div>
               <button type="button" class="btn btn-primary" @click="reset" :disabled="running" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .3rem; --bs-btn-font-size: .55rem;">Reset scores</button>
             </div>
             <div class="modal-footer">
