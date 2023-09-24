@@ -156,6 +156,7 @@
           pathStarted: false,
           votes: {},
           size: null,
+          vibrate: false,
         }
       },
       sockets: {
@@ -417,12 +418,11 @@
                   <option value="4">4x4</option>
                   <option value="5">5x5</option>
                 </select>
-          
               </div>
-              <div class"mb-3">
+              <div class="mb-3">
                 <label for="vibrate" class="form-label">Vibrate</label>
-                <input type="checkbox" class="form-control" id="vibrate" v-model="vibrate" v-on:change="updateSettings('vibrate')">
-              <div>
+                <input class="form-check-input" type="checkbox" id="vibrate" v-model="vibrate" v-on:change="updateSettings('vibrate')">
+              </div>
               <button type="button" class="btn btn-primary" @click="reset" :disabled="running" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .3rem; --bs-btn-font-size: .55rem;">Reset scores</button>
             </div>
             <div class="modal-footer">
