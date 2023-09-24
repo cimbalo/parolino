@@ -277,8 +277,10 @@
           handleTouchEnd(evt) {
             this.pathStarted = false;
             var newword = ""
-            this.path.forEach(el => {
+            document.querySelectorAll("td.selected").forEach(function(el){
               el.classList.remove("selected");
+            });
+            this.path.forEach(el => {
               newword += el.dataset.letter;
             });
             newword = newword.toLowerCase()
